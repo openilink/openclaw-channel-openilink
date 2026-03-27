@@ -1,5 +1,5 @@
 {
-  "name": "@openilink/openclaw-channel-openilink",
+  "name": "openclaw-channel-openilink",
   "version": "0.1.0",
   "description": "OpenClaw channel plugin for OpeniLink Hub — bridge WeChat bots via Hub",
   "main": "dist/index.js",
@@ -19,9 +19,6 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/openilink/openclaw-channel-openilink"
-  },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
   },
   "peerDependencies": {
     "openclaw": ">=2025.0.0"
