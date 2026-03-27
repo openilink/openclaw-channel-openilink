@@ -15,14 +15,22 @@ export async function startAccount(ctx: any): Promise<void> {
   }
 
   const wsUrl = `${config.hubUrl.replace(/^http/, "ws")}/bot/v1/ws?token=${config.appToken}`;
+  let reconnectDelay = 1000;
+  const MAX_DELAY = 60_000;
 
   function connect() {
     if (abortSignal.aborted) return;
+
+    const existing = connections.get(accountId);
+    if (existing && (existing.readyState === WebSocket.OPEN || existing.readyState === WebSocket.CONNECTING)) {
+      return;
+    }
 
     const ws = new WebSocket(wsUrl);
     connections.set(accountId, ws);
 
     ws.on("open", () => {
+      reconnectDelay = 1000;
       setStatus({ status: "connected" });
       console.log(`[openilink] Connected to Hub: ${config.hubUrl}`);
     });
@@ -50,9 +58,10 @@ export async function startAccount(ctx: any): Promise<void> {
     ws.on("close", () => {
       connections.delete(accountId);
       setStatus({ status: "disconnected" });
-      // Reconnect after 5s
       if (!abortSignal.aborted) {
-        setTimeout(connect, 5000);
+        const jitter = Math.random() * 1000;
+        setTimeout(connect, reconnectDelay + jitter);
+        reconnectDelay = Math.min(reconnectDelay * 2, MAX_DELAY);
       }
     });
 
