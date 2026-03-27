@@ -1,0 +1,18 @@
+{
+  "id": "openilink",
+  "channels": ["openilink"],
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "hub_url": {
+        "type": "string",
+        "description": "OpeniLink Hub URL (e.g., https://hub.openilink.com)"
+      },
+      "app_token": {
+        "type": "string",
+        "description": "App installation token from Hub"
+      }
+    },
+    "required": ["hub_url", "app_token"]
+  }
+}

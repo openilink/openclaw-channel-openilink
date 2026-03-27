@@ -1,0 +1,25 @@
+{
+  "name": "openclaw-channel-openilink",
+  "version": "0.1.0",
+  "description": "OpenClaw channel plugin for OpeniLink Hub — bridge WeChat bots via Hub",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "keywords": ["openclaw", "openclaw-plugin", "openilink", "wechat"],
+  "license": "MIT",
+  "peerDependencies": {
+    "openclaw": ">=2025.0.0"
+  },
+  "devDependencies": {
+    "openclaw": "*",
+    "typescript": "^5.0.0",
+    "ws": "^8.0.0",
+    "@types/ws": "^8.0.0"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
