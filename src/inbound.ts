@@ -20,59 +20,72 @@ export async function handleInboundEvent(
   const isDirect = !group;
   const peerId = isDirect ? senderId : group!.id;
 
-  // Resolve agent route
-  const route = rt.channel.routing.resolveAgentRoute({
-    cfg,
-    channel: "openilink",
-    accountId,
-    peer: { kind: isDirect ? "direct" : "group", id: peerId },
-  });
+  let route: any;
+  try {
+    route = rt.channel.routing.resolveAgentRoute({
+      cfg,
+      channel: "openilink",
+      accountId,
+      peer: { kind: isDirect ? "direct" : "group", id: peerId },
+    });
+  } catch (err) {
+    console.error("[openilink] Route error:", err);
+    return;
+  }
 
-  // Format inbound envelope
-  const envelopeOptions = rt.channel.reply.resolveEnvelopeFormatOptions(cfg);
-  const body = rt.channel.reply.formatInboundEnvelope({
-    channel: "OpeniLink",
-    from: senderName,
-    timestamp: event.event.timestamp * 1000,
-    body: content,
-    chatType: isDirect ? "direct" : "group",
-    sender: { name: senderName, id: senderId },
-    envelope: envelopeOptions,
-  });
+  let body: string;
+  let ctx: any;
+  try {
+    const envelopeOptions = rt.channel.reply.resolveEnvelopeFormatOptions(cfg);
+    body = rt.channel.reply.formatInboundEnvelope({
+      channel: "OpeniLink",
+      from: senderName,
+      timestamp: event.event.timestamp * 1000,
+      body: content,
+      chatType: isDirect ? "direct" : "group",
+      sender: { name: senderName, id: senderId },
+      envelope: envelopeOptions,
+    });
 
-  // Build inbound context
-  const ctx = rt.channel.reply.finalizeInboundContext({
-    Body: body,
-    RawBody: content,
-    CommandBody: content,
-    From: peerId,
-    To: peerId,
-    SessionKey: route.sessionKey,
-    AccountId: accountId,
-    ChatType: isDirect ? "direct" : "group",
-    SenderName: senderName,
-    SenderId: senderId,
-    Provider: "openilink",
-    Surface: "openilink",
-    MessageSid: event.event.id || `${event.trace_id}-${Date.now()}`,
-    Timestamp: event.event.timestamp * 1000,
-    CommandAuthorized: true,
-    OriginatingChannel: "openilink",
-    OriginatingTo: peerId,
-  });
+    ctx = rt.channel.reply.finalizeInboundContext({
+      Body: body,
+      RawBody: content,
+      CommandBody: content,
+      From: peerId,
+      To: peerId,
+      SessionKey: route.sessionKey,
+      AccountId: accountId,
+      ChatType: isDirect ? "direct" : "group",
+      SenderName: senderName,
+      SenderId: senderId,
+      Provider: "openilink",
+      Surface: "openilink",
+      MessageSid: event.event.id || `${event.trace_id}-${Date.now()}`,
+      Timestamp: event.event.timestamp * 1000,
+      CommandAuthorized: true,
+      OriginatingChannel: "openilink",
+      OriginatingTo: peerId,
+    });
+  } catch (err) {
+    console.error("[openilink] Context build error:", err);
+    return;
+  }
 
-  // Record inbound session
-  const storePath = rt.channel.session.resolveStorePath(`openilink/${accountId}`);
-  await rt.channel.session.recordInboundSession({
-    storePath,
-    sessionKey: route.sessionKey,
-    ctx,
-    onRecordError: (err: unknown) => {
-      console.error("[openilink] Session record error:", err);
-    },
-  });
+  try {
+    const storePath = rt.channel.session.resolveStorePath(`openilink/${accountId}`);
+    await rt.channel.session.recordInboundSession({
+      storePath,
+      sessionKey: route.sessionKey,
+      ctx,
+      onRecordError: (err: unknown) => {
+        console.error("[openilink] Session record error:", err);
+      },
+    });
+  } catch (err) {
+    console.error("[openilink] Session error:", err);
+    return;
+  }
 
-  // Dispatch to AI and deliver response
   try {
     await rt.channel.reply.dispatchReplyWithBufferedBlockDispatcher({
       ctx,
