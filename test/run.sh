@@ -3,8 +3,11 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-echo "🧪 Starting integration test..."
-docker compose up --build --abort-on-container-exit --exit-code-from openclaw
+cleanup() {
+  echo "Cleaning up..."
+  docker compose down -v
+}
+trap cleanup EXIT
 
-echo "🧹 Cleaning up..."
-docker compose down -v
+echo "Starting integration test..."
+docker compose up --build --abort-on-container-exit --exit-code-from openclaw

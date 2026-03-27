@@ -48,7 +48,9 @@ const server = createServer((req, res) => {
       const lastUserMsg = [...(parsed.messages || [])]
         .reverse()
         .find((m) => m.role === "user");
-      const content = mockResponse || `[echo] ${lastUserMsg?.content || ""}`;
+      const rawContent = lastUserMsg?.content ?? "";
+      const contentStr = typeof rawContent === "object" ? JSON.stringify(rawContent) : String(rawContent);
+      const content = mockResponse || `[echo] ${contentStr}`;
 
       const stream = parsed.stream === true;
 

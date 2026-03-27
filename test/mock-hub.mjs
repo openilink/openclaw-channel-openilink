@@ -85,8 +85,12 @@ wss.on("connection", (ws, req) => {
 
     const event = {
       type: "event",
+      v: 1,
       trace_id: `trace-${Date.now()}`,
+      installation_id: "mock-installation-1",
+      bot: { id: "mock-bot-1" },
       event: {
+        type: "message",
         id: `evt-${Date.now()}`,
         timestamp: Math.floor(Date.now() / 1000),
         data: {
@@ -108,10 +112,18 @@ wss.on("connection", (ws, req) => {
       if (msg.type === "ping") {
         ws.send(JSON.stringify({ type: "pong" }));
       }
-    } catch {}
+    } catch (err) {
+      console.log(`[mock-hub] Non-JSON WS message: ${data.toString()}`);
+    }
   });
 });
 
 httpServer.listen(PORT, () => {
   console.log(`[mock-hub] listening on :${PORT}`);
+});
+
+process.on("SIGTERM", () => {
+  wss.clients.forEach((ws) => ws.close());
+  wss.close();
+  httpServer.close();
 });
