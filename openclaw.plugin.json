@@ -1,5 +1,5 @@
 {
-  "id": "openclaw-channel-openilink",
+  "id": "openilink",
   "channels": ["openilink"],
   "configSchema": {
     "type": "object",
