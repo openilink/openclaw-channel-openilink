@@ -1,0 +1,45 @@
+services:
+  mock-llm:
+    build:
+      context: .
+      dockerfile: Dockerfile.mock
+    command: node mock-llm.mjs
+    environment:
+      MOCK_LLM_PORT: "9100"
+    ports:
+      - "9100:9100"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:9100/health').then(r=>{if(!r.ok)throw r})"]
+      interval: 2s
+      start_period: 3s
+      retries: 5
+
+  mock-hub:
+    build:
+      context: .
+      dockerfile: Dockerfile.mock
+    command: node mock-hub.mjs
+    environment:
+      MOCK_HUB_PORT: "9200"
+      MOCK_HUB_MESSAGE: "hello from integration test"
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:9200/health').then(r=>{if(!r.ok)throw r})"]
+      interval: 2s
+      start_period: 3s
+      retries: 5
+
+  openclaw:
+    image: node:22
+    depends_on:
+      mock-llm:
+        condition: service_healthy
+      mock-hub:
+        condition: service_healthy
+    environment:
+      HOME: /root
+    volumes:
+      - ./openclaw.config.json:/tmp/openclaw.config.json:ro
+      - ./entrypoint.sh:/tmp/entrypoint.sh:ro
+    command: ["bash", "/tmp/entrypoint.sh"]

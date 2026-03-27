@@ -1,0 +1,36 @@
+{
+  "gateway": {
+    "mode": "local"
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "mock/mock-model"
+      }
+    }
+  },
+  "models": {
+    "providers": {
+      "mock": {
+        "baseUrl": "http://mock-llm:9100/v1",
+        "apiKey": "mock-key",
+        "api": "openai-completions",
+        "models": [{ "id": "mock-model", "name": "Mock Model" }]
+      }
+    }
+  },
+  "channels": {
+    "openilink": {
+      "hub_url": "http://mock-hub:9200",
+      "app_token": "mock-token"
+    }
+  },
+  "plugins": {
+    "allow": ["openclaw-channel-openilink"],
+    "entries": {
+      "openclaw-channel-openilink": {
+        "enabled": true
+      }
+    }
+  }
+}
