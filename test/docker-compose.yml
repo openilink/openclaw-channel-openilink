@@ -11,6 +11,7 @@ services:
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:9100/health').then(r=>{if(!r.ok)throw r})"]
       interval: 2s
+      start_period: 3s
       retries: 5
 
   mock-hub:
@@ -26,6 +27,7 @@ services:
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:9200/health').then(r=>{if(!r.ok)throw r})"]
       interval: 2s
+      start_period: 3s
       retries: 5
 
   openclaw:
@@ -40,4 +42,4 @@ services:
     volumes:
       - ./openclaw.config.json:/tmp/openclaw.config.json:ro
       - ./entrypoint.sh:/tmp/entrypoint.sh:ro
-    command: ["sh", "/tmp/entrypoint.sh"]
+    command: ["bash", "/tmp/entrypoint.sh"]

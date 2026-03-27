@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 echo "=== Installing OpenClaw ==="
@@ -19,6 +19,11 @@ OC_PID=$!
 echo "=== Waiting for reply to arrive at mock-hub ==="
 for i in $(seq 1 30); do
   sleep 1
+  # Check if gateway is still alive
+  if ! kill -0 $OC_PID 2>/dev/null; then
+    echo "=== FAIL: gateway process died ==="
+    exit 1
+  fi
   if node -e "fetch('http://mock-hub:9200/replies').then(r=>r.json()).then(d=>{console.log('poll $i: '+d.length+' replies');process.exit(d.length>0?0:1)}).catch(()=>process.exit(1))" 2>/dev/null; then
     echo "=== SUCCESS: received reply at mock-hub ==="
     kill $OC_PID 2>/dev/null || true

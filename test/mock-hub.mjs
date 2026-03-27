@@ -34,6 +34,13 @@ const httpServer = createServer((req, res) => {
     return;
   }
 
+  if (req.method === "DELETE" && req.url === "/replies") {
+    replies.length = 0;
+    res.writeHead(200);
+    res.end("ok");
+    return;
+  }
+
   if (req.method === "POST" && req.url === "/bot/v1/message/send") {
     let body = "";
     req.on("data", (chunk) => (body += chunk));
@@ -75,8 +82,9 @@ wss.on("connection", (ws, req) => {
     },
   }));
 
-  // Send a test message event after a short delay
+  // Send a test message event after the client has time to register handlers
   setTimeout(() => {
+    if (ws.readyState !== 1) return;
     const senderId = process.env.MOCK_HUB_SENDER_ID || "test-user-1";
     const senderName = process.env.MOCK_HUB_SENDER_NAME || "TestUser";
     const peerId = process.env.MOCK_HUB_PEER_ID || senderId;
