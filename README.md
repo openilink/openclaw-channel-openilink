@@ -22,11 +22,7 @@ OpeniLink Hub Bot API
 ## 安装
 
 ```bash
-# 配置 GitHub Packages
-echo "@openilink:registry=https://npm.pkg.github.com" >> ~/.npmrc
-
-# 安装插件
-openclaw plugins install @openilink/openclaw-channel-openilink
+npm config set @openilink:registry https://npm.pkg.github.com && openclaw plugins install @openilink/openclaw-channel-openilink
 ```
 
 ## 配置
@@ -121,11 +117,7 @@ OpenClaw channel plugin for [OpeniLink Hub](https://github.com/openilink/openili
 ### Quick Start
 
 ```bash
-# Configure GitHub Packages registry
-echo "@openilink:registry=https://npm.pkg.github.com" >> ~/.npmrc
-
-# Install
-openclaw plugins install @openilink/openclaw-channel-openilink
+npm config set @openilink:registry https://npm.pkg.github.com && openclaw plugins install @openilink/openclaw-channel-openilink
 ```
 
 Configure `openclaw.yaml`:
