@@ -1,4 +1,4 @@
-import WebSocket from "ws";
+import type WebSocket from "ws";
 import type { OpeniLinkConfig, HubWSMessage, HubWSEvent } from "./types.js";
 import { getPluginRuntime } from "./runtime.js";
 import { handleInboundEvent } from "./inbound.js";
@@ -14,6 +14,8 @@ export async function startAccount(ctx: any): Promise<void> {
     return;
   }
 
+  const { default: WS } = await import("ws");
+
   const wsUrl = `${config.hubUrl.replace(/^http/, "ws")}/bot/v1/ws?token=${config.appToken}`;
   let reconnectDelay = 1000;
   const MAX_DELAY = 60_000;
@@ -22,11 +24,11 @@ export async function startAccount(ctx: any): Promise<void> {
     if (abortSignal.aborted) return;
 
     const existing = connections.get(accountId);
-    if (existing && (existing.readyState === WebSocket.OPEN || existing.readyState === WebSocket.CONNECTING)) {
+    if (existing && (existing.readyState === WS.OPEN || existing.readyState === WS.CONNECTING)) {
       return;
     }
 
-    const ws = new WebSocket(wsUrl);
+    const ws = new WS(wsUrl);
     connections.set(accountId, ws);
 
     ws.on("open", () => {
@@ -35,7 +37,7 @@ export async function startAccount(ctx: any): Promise<void> {
       console.log(`[openilink] Connected to Hub: ${config.hubUrl}`);
     });
 
-    ws.on("message", (data: WebSocket.Data) => {
+    ws.on("message", (data: any) => {
       try {
         const msg: HubWSMessage = JSON.parse(data.toString());
 
@@ -72,7 +74,7 @@ export async function startAccount(ctx: any): Promise<void> {
 
     // Ping every 30s
     const pingInterval = setInterval(() => {
-      if (ws.readyState === WebSocket.OPEN) {
+      if (ws.readyState === WS.OPEN) {
         ws.send(JSON.stringify({ type: "ping" }));
       }
     }, 30000);

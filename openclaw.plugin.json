@@ -1,5 +1,5 @@
 {
-  "id": "openilink",
+  "id": "openclaw-channel-openilink",
   "channels": ["openilink"],
   "configSchema": {
     "type": "object",
@@ -13,6 +13,6 @@
         "description": "App installation token from Hub"
       }
     },
-    "required": ["hub_url", "app_token"]
+    "required": []
   }
 }
