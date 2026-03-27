@@ -30,8 +30,8 @@ openclaw plugins install openclaw-channel-openilink
 ### 前置步骤
 
 1. 部署或访问一个 [OpeniLink Hub](https://github.com/openilink/openilink-hub) 实例
-2. 在 Hub 上安装 **OpenClaw** App 到你的 Bot（应用市场 → OpenClaw → 安装）
-3. 在安装详情页复制 **Token**
+2. 进入 Bot 详情页 → 应用市场 → 找到 **OpenClaw** → 点击安装
+3. 安装完成后，在 Installation 详情页复制 **Hub URL** 和 **Token**
 
 ### 单账户
 
