@@ -31,7 +31,7 @@ export async function startAccount(ctx: any): Promise<void> {
 
     ws.on("open", () => {
       reconnectDelay = 1000;
-      setStatus({ status: "connected" });
+      setStatus({ status: "running" });
       console.log(`[openilink] Connected to Hub: ${config.hubUrl}`);
     });
 
@@ -85,6 +85,11 @@ export async function startAccount(ctx: any): Promise<void> {
   }
 
   connect();
+
+  // Keep the promise alive until the account is stopped
+  await new Promise<void>((resolve) => {
+    abortSignal.addEventListener("abort", () => resolve());
+  });
 }
 
 export async function stopAccount(ctx: any): Promise<void> {
