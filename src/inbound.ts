@@ -126,11 +126,13 @@ export function buildBodyFromItems(
   if (!items || items.length === 0) return content;
 
   const parts: string[] = [];
+  let hasTextItem = false;
 
   for (const item of items) {
     switch (item.type) {
       case "text":
         if (item.text) parts.push(item.text);
+        hasTextItem = true;
         break;
       case "file": {
         const name = item.file_name || "file";
@@ -163,6 +165,11 @@ export function buildBodyFromItems(
         break;
       }
     }
+  }
+
+  // Preserve caption/content if not already included via a text item
+  if (content && !hasTextItem && parts.length > 0) {
+    parts.unshift(content);
   }
 
   return parts.join("\n") || content;

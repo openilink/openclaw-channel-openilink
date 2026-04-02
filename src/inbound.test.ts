@@ -93,6 +93,24 @@ describe("buildBodyFromItems", () => {
     expect(result).toBe("Here is the file\n[File: data.csv (1.0KB)]");
   });
 
+  it("preserves caption/content for media messages without text item", () => {
+    const items: HubMessageItem[] = [
+      { type: "file", file_name: "doc.pdf", media: { file_size: 2048 } },
+    ];
+    const result = buildBodyFromItems("Please review this", "file", items);
+    expect(result).toBe("Please review this\n[File: doc.pdf (2.0KB)]");
+  });
+
+  it("does not duplicate content when text item already present", () => {
+    const items: HubMessageItem[] = [
+      { type: "text", text: "Here is the file" },
+      { type: "file", file_name: "data.csv", media: { file_size: 1024 } },
+    ];
+    const result = buildBodyFromItems("Here is the file", "file", items);
+    // content should NOT be prepended since there's already a text item
+    expect(result).toBe("Here is the file\n[File: data.csv (1.0KB)]");
+  });
+
   it("falls back to content when items produce no parts", () => {
     const items: HubMessageItem[] = [{ type: "text" }]; // text with no text field
     expect(buildBodyFromItems("fallback", "text", items)).toBe("fallback");
