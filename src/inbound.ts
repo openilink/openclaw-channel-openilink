@@ -115,7 +115,7 @@ export async function handleInboundEvent(
  * For text messages, returns content as-is.
  * For media messages, appends file/media info so the AI can see what was sent.
  */
-function buildBodyFromItems(
+export function buildBodyFromItems(
   content: string,
   msgType: string | undefined,
   items: HubMessageItem[] | undefined,
@@ -165,7 +165,7 @@ function buildBodyFromItems(
   return parts.join("\n") || content;
 }
 
-function formatFileSize(bytes: number): string {
+export function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes}B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;

@@ -18,6 +18,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
+    "test": "vitest run",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -37,7 +38,8 @@
   "devDependencies": {
     "@types/ws": "^8.0.0",
     "openclaw": "*",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.2"
   },
   "dependencies": {
     "ws": "^8.18.0"
