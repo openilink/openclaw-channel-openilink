@@ -43,4 +43,5 @@ services:
     volumes:
       - ./openclaw.config.json:/tmp/openclaw.config.json:ro
       - ./entrypoint.sh:/tmp/entrypoint.sh:ro
+      - ../:/tmp/plugin-src:ro
     command: ["bash", "/tmp/entrypoint.sh"]

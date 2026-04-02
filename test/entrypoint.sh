@@ -4,9 +4,14 @@ set -e
 echo "=== Installing OpenClaw ==="
 npm install -g openclaw
 
-echo "=== Installing plugin (no config yet) ==="
+echo "=== Installing plugin from local source ==="
 rm -rf /root/.openclaw/extensions/openclaw-channel-openilink
-openclaw plugins install openclaw-channel-openilink
+mkdir -p /root/.openclaw/extensions/openclaw-channel-openilink
+cp -r /tmp/plugin-src/dist /root/.openclaw/extensions/openclaw-channel-openilink/
+cp /tmp/plugin-src/package.json /root/.openclaw/extensions/openclaw-channel-openilink/
+cp /tmp/plugin-src/openclaw.plugin.json /root/.openclaw/extensions/openclaw-channel-openilink/
+cd /root/.openclaw/extensions/openclaw-channel-openilink && npm install --omit=dev 2>&1
+cd /
 
 echo "=== Writing config after plugin is installed ==="
 mkdir -p /root/.openclaw
@@ -31,27 +36,54 @@ for i in $(seq 1 40); do
   if [ "$REPLY_COUNT" -ge "$EXPECTED_REPLIES" ]; then
     echo "=== Received $REPLY_COUNT replies, verifying content ==="
 
-    # Verify that one of the replies contains the file name (test-report.pdf)
-    HAS_FILE=$(node -e "
+    # Verify that the file reply contains full file metadata (not just filename)
+    # buildBodyFromItems should produce "[File: test-report.pdf (200.0KB)]" with URL
+    VERIFY_RESULT=$(node -e "
       fetch('http://mock-hub:9200/replies')
         .then(r => r.json())
         .then(replies => {
-          const hasFile = replies.some(r => r.content && r.content.includes('test-report.pdf'));
-          console.log(hasFile ? 'yes' : 'no');
-        })
-        .catch(() => console.log('no'));
-    " 2>/dev/null || echo "no")
+          console.error('All replies:');
+          for (const r of replies) console.error(JSON.stringify(r.content).slice(0, 300));
 
-    if [ "$HAS_FILE" = "yes" ]; then
-      echo "=== SUCCESS: received $REPLY_COUNT replies, file message forwarded correctly ==="
-      kill $OC_PID 2>/dev/null || true
-      exit 0
-    else
-      echo "=== FAIL: replies received but file info (test-report.pdf) not found in any reply ==="
-      node -e "fetch('http://mock-hub:9200/replies').then(r=>r.json()).then(d=>console.log(JSON.stringify(d,null,2)))" 2>/dev/null || true
-      kill $OC_PID 2>/dev/null || true
-      exit 1
-    fi
+          const fileReply = replies.find(r => r.content && r.content.includes('test-report.pdf'));
+          if (!fileReply) { console.log('NO_FILE_REPLY'); return; }
+
+          // Check for structured file format from buildBodyFromItems
+          const c = fileReply.content;
+          const hasFormat = c.includes('[File:') || c.includes('200.0KB') || c.includes('fake-media');
+          if (hasFormat) {
+            console.log('FULL_FILE_INFO');
+          } else {
+            console.log('FILENAME_ONLY');
+          }
+        })
+        .catch(e => { console.error(e); console.log('ERROR'); });
+    " 2>&1) || VERIFY_RESULT="ERROR"
+
+    echo "Verify result: $VERIFY_RESULT"
+
+    case "$VERIFY_RESULT" in
+      *FULL_FILE_INFO*)
+        echo "=== SUCCESS: file message forwarded with full metadata (name, size, URL) ==="
+        kill $OC_PID 2>/dev/null || true
+        exit 0
+        ;;
+      *FILENAME_ONLY*)
+        echo "=== FAIL: file message forwarded but only filename, missing [File:] format/size/URL ==="
+        kill $OC_PID 2>/dev/null || true
+        exit 1
+        ;;
+      *NO_FILE_REPLY*)
+        echo "=== FAIL: no reply contains test-report.pdf ==="
+        kill $OC_PID 2>/dev/null || true
+        exit 1
+        ;;
+      *)
+        echo "=== FAIL: verification error ==="
+        kill $OC_PID 2>/dev/null || true
+        exit 1
+        ;;
+    esac
   fi
 done
 
