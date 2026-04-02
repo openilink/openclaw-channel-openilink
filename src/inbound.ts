@@ -131,8 +131,10 @@ export function buildBodyFromItems(
   for (const item of items) {
     switch (item.type) {
       case "text":
-        if (item.text) parts.push(item.text);
-        hasTextItem = true;
+        if (item.text) {
+          parts.push(item.text);
+          hasTextItem = true;
+        }
         break;
       case "file": {
         const name = item.file_name || "file";

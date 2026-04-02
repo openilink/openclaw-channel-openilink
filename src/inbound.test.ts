@@ -111,6 +111,15 @@ describe("buildBodyFromItems", () => {
     expect(result).toBe("Here is the file\n[File: data.csv (1.0KB)]");
   });
 
+  it("preserves caption when text item exists but has empty text", () => {
+    const items: HubMessageItem[] = [
+      { type: "text" }, // empty text item
+      { type: "file", file_name: "doc.pdf", media: { file_size: 1024 } },
+    ];
+    const result = buildBodyFromItems("Caption here", "file", items);
+    expect(result).toBe("Caption here\n[File: doc.pdf (1.0KB)]");
+  });
+
   it("falls back to content when items produce no parts", () => {
     const items: HubMessageItem[] = [{ type: "text" }]; // text with no text field
     expect(buildBodyFromItems("fallback", "text", items)).toBe("fallback");
