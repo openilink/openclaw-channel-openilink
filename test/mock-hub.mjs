@@ -82,7 +82,8 @@ wss.on("connection", (ws, req) => {
     },
   }));
 
-  // Send a test message event after the client has time to register handlers
+  // Send test message events after the client has time to register handlers.
+  // Sends a text message first, then a file message to test media forwarding.
   setTimeout(() => {
     if (ws.readyState !== 1) return;
     const senderId = process.env.MOCK_HUB_SENDER_ID || "test-user-1";
@@ -91,26 +92,67 @@ wss.on("connection", (ws, req) => {
     const messageText = process.env.MOCK_HUB_MESSAGE || "hello from test";
     const groupId = process.env.MOCK_HUB_GROUP || null;
 
-    const event = {
+    const senderData = { id: senderId, name: senderName };
+    const groupData = groupId ? { id: groupId, name: "TestGroup" } : null;
+
+    // Event 1: text message
+    const textEvent = {
       type: "event",
       v: 1,
-      trace_id: `trace-${Date.now()}`,
+      trace_id: `trace-text-${Date.now()}`,
       installation_id: "mock-installation-1",
       bot: { id: "mock-bot-1" },
       event: {
-        type: "message",
-        id: `evt-${Date.now()}`,
+        type: "message.text",
+        id: `evt-text-${Date.now()}`,
         timestamp: Math.floor(Date.now() / 1000),
         data: {
-          sender: { id: senderId, name: senderName },
-          group: groupId ? { id: groupId, name: "TestGroup" } : null,
+          sender: senderData,
+          group: groupData,
           content: messageText,
+          msg_type: "text",
+          items: [{ type: "text", text: messageText }],
         },
       },
     };
 
-    console.log(`[mock-hub] Sending test event: ${messageText}`);
-    ws.send(JSON.stringify(event));
+    console.log(`[mock-hub] Sending text event: ${messageText}`);
+    ws.send(JSON.stringify(textEvent));
+
+    // Event 2: file message (sent after a short delay)
+    setTimeout(() => {
+      if (ws.readyState !== 1) return;
+      const fileEvent = {
+        type: "event",
+        v: 1,
+        trace_id: `trace-file-${Date.now()}`,
+        installation_id: "mock-installation-1",
+        bot: { id: "mock-bot-1" },
+        event: {
+          type: "message.file",
+          id: `evt-file-${Date.now()}`,
+          timestamp: Math.floor(Date.now() / 1000),
+          data: {
+            sender: senderData,
+            group: groupData,
+            content: "test-report.pdf",
+            msg_type: "file",
+            items: [{
+              type: "file",
+              file_name: "test-report.pdf",
+              media: {
+                url: "http://mock-hub:9200/fake-media/test-report.pdf",
+                file_size: 204800,
+                media_type: "application/pdf",
+              },
+            }],
+          },
+        },
+      };
+
+      console.log("[mock-hub] Sending file event: test-report.pdf");
+      ws.send(JSON.stringify(fileEvent));
+    }, 1000);
   }, 500);
 
   // Handle pings

@@ -44,6 +44,12 @@ const server = createServer((req, res) => {
         return;
       }
 
+      // Log all user messages for debugging
+      const userMsgs = (parsed.messages || []).filter((m) => m.role === "user");
+      for (const um of userMsgs) {
+        console.log(`[mock-llm] user message: ${JSON.stringify(um.content).slice(0, 500)}`);
+      }
+
       const mockResponse = req.headers["x-mock-response"];
       const lastUserMsg = [...(parsed.messages || [])]
         .reverse()

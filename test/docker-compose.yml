@@ -22,6 +22,7 @@ services:
     environment:
       MOCK_HUB_PORT: "9200"
       MOCK_HUB_MESSAGE: "hello from integration test"
+      # mock-hub now sends both a text and a file event
     ports:
       - "9200:9200"
     healthcheck:
@@ -42,4 +43,5 @@ services:
     volumes:
       - ./openclaw.config.json:/tmp/openclaw.config.json:ro
       - ./entrypoint.sh:/tmp/entrypoint.sh:ro
+      - ../:/tmp/plugin-src:ro
     command: ["bash", "/tmp/entrypoint.sh"]

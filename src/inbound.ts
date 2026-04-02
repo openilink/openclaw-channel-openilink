@@ -1,4 +1,4 @@
-import type { HubWSEvent, OpeniLinkConfig } from "./types.js";
+import type { HubWSEvent, HubMessageItem, OpeniLinkConfig } from "./types.js";
 import { getPluginRuntime } from "./runtime.js";
 
 export async function handleInboundEvent(
@@ -14,7 +14,12 @@ export async function handleInboundEvent(
   const eventData = event.event.data;
   const sender = eventData.sender;
   const group = eventData.group;
-  const content = eventData.content || "";
+  const items = eventData.items;
+  const rawContent = eventData.content || "";
+  const msgType = eventData.msg_type;
+  const content = msgType && msgType !== "text"
+    ? buildBodyFromItems(rawContent, msgType, items)
+    : rawContent;
   const senderId = sender?.id || "unknown";
   const senderName = sender?.name || senderId;
   const isDirect = !group;
@@ -106,6 +111,76 @@ export async function handleInboundEvent(
   } catch (err) {
     console.error("[openilink] Dispatch error:", err);
   }
+}
+
+/**
+ * Build a human-readable body from event data, incorporating media items.
+ * For text messages, returns content as-is.
+ * For media messages, appends file/media info so the AI can see what was sent.
+ */
+export function buildBodyFromItems(
+  content: string,
+  msgType: string | undefined,
+  items: HubMessageItem[] | undefined,
+): string {
+  if (!items || items.length === 0) return content;
+
+  const parts: string[] = [];
+  let hasTextItem = false;
+
+  for (const item of items) {
+    switch (item.type) {
+      case "text":
+        if (item.text) {
+          parts.push(item.text);
+          hasTextItem = true;
+        }
+        break;
+      case "file": {
+        const name = item.file_name || "file";
+        const size = item.media?.file_size
+          ? ` (${formatFileSize(item.media.file_size)})`
+          : "";
+        const url = item.media?.url ? `\n${item.media.url}` : "";
+        parts.push(`[File: ${name}${size}]${url}`);
+        break;
+      }
+      case "image": {
+        const url = item.media?.url ? `\n${item.media.url}` : "";
+        parts.push(`[Image]${url}`);
+        break;
+      }
+      case "voice": {
+        const duration = item.media?.play_time
+          ? ` ${item.media.play_time}s`
+          : "";
+        const url = item.media?.url ? `\n${item.media.url}` : "";
+        parts.push(`[Voice${duration}]${url}`);
+        break;
+      }
+      case "video": {
+        const duration = item.media?.play_length
+          ? ` ${item.media.play_length}s`
+          : "";
+        const url = item.media?.url ? `\n${item.media.url}` : "";
+        parts.push(`[Video${duration}]${url}`);
+        break;
+      }
+    }
+  }
+
+  // Preserve caption/content if not already included via a text item
+  if (content && !hasTextItem && parts.length > 0) {
+    parts.unshift(content);
+  }
+
+  return parts.join("\n") || content;
+}
+
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes}B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
 }
 
 async function sendToHub(config: OpeniLinkConfig, content: string, peerId: string, traceId?: string): Promise<void> {
