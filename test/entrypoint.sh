@@ -48,13 +48,15 @@ for i in $(seq 1 40); do
           const fileReply = replies.find(r => r.content && r.content.includes('test-report.pdf'));
           if (!fileReply) { console.log('NO_FILE_REPLY'); return; }
 
-          // Check for structured file format from buildBodyFromItems
+          // Verify ALL markers present: format tag, size, and URL
           const c = fileReply.content;
-          const hasFormat = c.includes('[File:') || c.includes('200.0KB') || c.includes('fake-media');
-          if (hasFormat) {
+          const hasTag = c.includes('[File:');
+          const hasSize = c.includes('200.0KB');
+          const hasUrl = c.includes('fake-media');
+          if (hasTag && hasSize && hasUrl) {
             console.log('FULL_FILE_INFO');
           } else {
-            console.log('FILENAME_ONLY');
+            console.log('FILENAME_ONLY: tag=' + hasTag + ' size=' + hasSize + ' url=' + hasUrl);
           }
         })
         .catch(e => { console.error(e); console.log('ERROR'); });
