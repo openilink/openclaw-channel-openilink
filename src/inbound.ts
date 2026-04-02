@@ -16,7 +16,10 @@ export async function handleInboundEvent(
   const group = eventData.group;
   const items = eventData.items;
   const rawContent = eventData.content || "";
-  const content = buildBodyFromItems(rawContent, eventData.msg_type, items);
+  const msgType = eventData.msg_type;
+  const content = msgType && msgType !== "text"
+    ? buildBodyFromItems(rawContent, msgType, items)
+    : rawContent;
   const senderId = sender?.id || "unknown";
   const senderName = sender?.name || senderId;
   const isDirect = !group;

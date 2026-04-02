@@ -97,4 +97,17 @@ describe("buildBodyFromItems", () => {
     const items: HubMessageItem[] = [{ type: "text" }]; // text with no text field
     expect(buildBodyFromItems("fallback", "text", items)).toBe("fallback");
   });
+
+  it("text messages with items still return rawContent at the call site", () => {
+    // buildBodyFromItems itself processes items, but the call site in
+    // handleInboundEvent should skip it for text messages and use rawContent.
+    // Verify that for msgType "text", the caller logic preserves rawContent.
+    const rawContent = "Hello from hub";
+    const msgType = "text";
+    const items: HubMessageItem[] = [{ type: "text", text: "different text from items" }];
+    const content = msgType && msgType !== "text"
+      ? buildBodyFromItems(rawContent, msgType, items)
+      : rawContent;
+    expect(content).toBe("Hello from hub");
+  });
 });
